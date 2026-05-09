@@ -2,9 +2,12 @@ import express, { urlencoded } from "express"
 import cors from "cors"
 import cookieparser from "cookie-parser"
 const app = express();
+import { borrowRouter } from "./routes/borrow.route.js"
 
 
-import { router } from "./routes/user.route.js";
+import { userrouter } from "./routes/user.route.js";
+import { bookrouter } from "./routes/books.route.js"
+
 
 
 app.use(cors({
@@ -19,7 +22,11 @@ app.use(express.static("public")) // it use to store some image inside the publi
 app.use(cookieparser())
 
 
-app.use("/api/users", router)
+app.use("/api/users", userrouter)
+
+app.use("/api/books", bookrouter)
+
+app.use("/api/borrow", borrowRouter)
 
 
 export { app }

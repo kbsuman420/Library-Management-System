@@ -24,13 +24,7 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: true
-    },
-    borrowedBooks: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Books"
-        }
-    ]
+    }
 
 }, {timestamps: true})
 

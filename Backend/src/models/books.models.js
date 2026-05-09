@@ -1,12 +1,6 @@
 import mongoose from "mongoose";
 
 const bookSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        unique: true,
-        required: true,
-        lowercase: true
-    },
     title: {
         type: String,
         required: true
@@ -17,7 +11,8 @@ const bookSchema = new mongoose.Schema({
     },
     isbn: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     totalCopies: {
         type: Number,
@@ -26,7 +21,6 @@ const bookSchema = new mongoose.Schema({
     },
     availableCopies: {
         type: Number,
-        required: true,
         default: 0
     },
     description: {
