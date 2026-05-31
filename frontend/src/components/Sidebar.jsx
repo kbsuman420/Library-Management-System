@@ -3,11 +3,11 @@ import { LayoutDashboard, Book, ClipboardList, CheckSquare, User, X } from 'luci
 
 function Sidebar({ isOpen, setIsOpen }) {
   const menuItems = [
-    { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
-    { name: 'Books', path: '/books', icon: <Book size={20} /> },
-    { name: 'Borrow Records', path: '/borrow-records', icon: <ClipboardList size={20} /> },
-    { name: 'Return Books Records', path: '/return-records', icon: <CheckSquare size={20} /> },
-    { name: 'Profile', path: '/profile', icon: <User size={20} /> },
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} /> },
+    { name: 'Books', path: '/dashboard/books', icon: <Book size={20} /> },
+    { name: 'Borrow Records', path: '/dashboard/borrow-records', icon: <ClipboardList size={20} /> },
+    { name: 'Return Books Records', path: '/dashboard/return-records', icon: <CheckSquare size={20} /> },
+    { name: 'Profile', path: '/dashboard/profile', icon: <User size={20} /> },
   ];
 
   return (

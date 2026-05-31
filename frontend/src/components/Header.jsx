@@ -1,11 +1,20 @@
 import { UserCircle, LogOut, Menu, Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function Header({ setIsSidebarOpen }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    navigate("/admin/login");
+  }
+
   return (
     <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 sm:px-6 z-10 sticky top-0">
       {/* Mobile Hamburger & Welcome */}
       <div className="flex items-center gap-3">
-        <button 
+        <button
           className="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
           onClick={() => setIsSidebarOpen(true)}
         >
@@ -20,13 +29,13 @@ function Header({ setIsSidebarOpen }) {
           <Bell size={20} />
           <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
         </button>
-        
+
         <div className="hidden sm:flex items-center gap-2">
           <UserCircle size={32} className="text-indigo-600" />
           <span className="font-medium text-gray-700">Admin User</span>
         </div>
-        
-        <button className="flex items-center gap-2 text-red-500 hover:text-red-700 transition-colors bg-red-50 hover:bg-red-100 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm sm:text-base">
+
+        <button onClick={handleLogout} className="flex items-center gap-2 text-red-500 hover:text-red-700 transition-colors bg-red-50 hover:bg-red-100 px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm sm:text-base">
           <LogOut size={18} />
           <span className="hidden sm:inline">Sign Out</span>
         </button>

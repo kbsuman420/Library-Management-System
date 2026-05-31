@@ -15,8 +15,9 @@ const getBooks = asyncHandler (async (req, res) => {
 
 const newBookAdd = asyncHandler(async (req, res) => {
     const {title, author, isbn, totalCopies, description, coverImage} = req.body
+    console.log(title)
 
-    if(!title || !author || !isbn || !totalCopies || !description) {
+    if(!title || !author || !isbn || !totalCopies ) {
         throw new ApiError(400, "All field required")
     }
     const existed = await Book.findOne({ isbn: isbn});
