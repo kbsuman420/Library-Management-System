@@ -10,16 +10,16 @@ const registerUserFn = async (req, res) => {
     // create a object and enter in db
     // check the user creation
     // remove password and send res
-    const {fullname, email, password, role, phone} = req.body;
+    const { fullname, email, password, role, phone } = req.body;
 
-    if(
-        [fullname, email, password, role, phone ].some((field) => field.trim() == "")
+    if (
+        [fullname, email, password, role, phone].some((field) => field.trim() == "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
-    const existedUser = await User.findOne({ email: email});
-    if(!existedUser) {
-        throw new ApiError(400, "Email address already used")
+    const existedUser = await User.findOne({ email: email });
+    if (existedUser) {
+        throw new ApiError(401, "Email address already used")
     }
     const user = await User.create(
         {
@@ -31,7 +31,7 @@ const registerUserFn = async (req, res) => {
         }
     )
 
-    const createdUser = User.findById(user._id).select(
+    const createdUser = await User.findById(user._id).select(
         "-password"
     )
     console.log(createdUser);
@@ -46,15 +46,15 @@ const loginUserFn = async (req, res) => {
     // find user using email if not throw error to the user
     // check the password correct or not if password wrong throw error
     // password is correct then return res user
-    const {email, password} = req.body;
-    if(!email || !password) {
+    const { email, password } = req.body;
+    if (!email || !password) {
         throw new ApiError(400, "All field is required")
     }
 
-    const user = await User.findOne({ email: email})
-    if(!user) throw new ApiError("User not found!!")
+    const user = await User.findOne({ email: email })
+    if (!user) throw new ApiError("User not found!!")
     const isCorrectPassword = await user.isCorrectPassword(password)
-    if(!isCorrectPassword) {
+    if (!isCorrectPassword) {
         throw new ApiError("Password is incorrect")
     }
 

@@ -1,3 +1,7 @@
+import dotenv from "dotenv"
+
+dotenv.config()
+
 import express, { urlencoded } from "express"
 import cors from "cors"
 import cookieparser from "cookie-parser"
@@ -8,7 +12,7 @@ import { borrowRouter } from "./routes/borrow.route.js"
 import { userrouter } from "./routes/user.route.js";
 import { bookrouter } from "./routes/books.route.js"
 
-
+console.log(process.env.CORS_ORIGIN)
 
 app.use(cors({
     origin: process.env.CORS_ORIGIN,

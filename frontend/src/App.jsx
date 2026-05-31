@@ -1,38 +1,53 @@
-import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import Dashboard from './pages/Dashboard';
-import Books from './pages/Books';
-import BorrowRecords from './pages/BorrowRecords';
-import ReturnRecords from './pages/ReturnRecords';
-import Profile from './pages/Profile';
+
+import Dashboard from './pages/admin/Dashboard';
+import Books from './pages/admin/Books';
+import BorrowRecords from './pages/admin/BorrowRecords';
+import ReturnRecords from './pages/admin/ReturnRecords';
+import Profile from './pages/admin/Profile';
+import Authentication from "./pages/Authentication"
+import DashBoardLayout from "./pages/DashBoardLayout"
+
+import AdminLogin from "./components/AdminLogin"
+import StudentLogin from './components/StudentLogin';
+import Register from './components/Register';
+
+import StudentDashboardLayout from './pages/StudentDashboardLayout';
+import StudentDashboard from './pages/student/StudentDashboard';
+import StudentBooks from './pages/student/StudentBooks';
+import StudentBorrowRecords from './pages/student/StudentBorrowRecords';
+import StudentReturnRecords from './pages/student/StudentReturnRecords';
+import StudentProfile from './pages/student/StudentProfile';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-100 font-sans overflow-hidden">
-      {/* Sidebar Component */}
-      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+    <Routes>
+      <Route path='/' element={<Authentication />}>
+        <Route index element={<StudentLogin />} />
+        <Route path="login" element={<StudentLogin />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="admin/login" element={<AdminLogin />} />
+      </Route>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden w-full transition-all duration-300 md:ml-64">
-        {/* Header Component */}
-        <Header setIsSidebarOpen={setIsSidebarOpen} />
+      <Route path='/dashboard' element={<DashBoardLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="books" element={<Books />} />
+        <Route path="borrow-records" element={<BorrowRecords />} />
+        <Route path="return-records" element={<ReturnRecords />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
 
-        {/* Page Content area with scroll */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 sm:p-6">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/books" element={<Books />} />
-            <Route path="/borrow-records" element={<BorrowRecords />} />
-            <Route path="/return-records" element={<ReturnRecords />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
-        </main>
-      </div>
-    </div>
+      <Route path='student-dashboard' element={<StudentDashboardLayout />}>
+        <Route index element={<StudentDashboard />} />
+        <Route path="books" element={<StudentBooks />} />
+        <Route path="borrow-records" element={<StudentBorrowRecords />} />
+        <Route path="return-records" element={<StudentReturnRecords />} />
+        <Route path="profile" element={<StudentProfile />} />
+      </Route>
+
+    </Routes>
+
   );
 }
 
