@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, BookOpen, Clock, AlertCircle, CheckCircle } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
 
 const RECORDS = [
   { id: 1, title: "Clean Code", author: "Robert C. Martin", borrowDate: "2026-05-20", dueDate: "2026-06-10", status: "Active" },
@@ -26,18 +27,28 @@ function StatusBadge({ status }) {
 }
 
 function StudentBorrowRecords() {
+
+  const borrowedBooks = useOutletContext();
+
+  console.log(borrowedBooks);
+
+
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const filtered = RECORDS.filter((r) => {
-    const matchSearch = r.title.toLowerCase().includes(search.toLowerCase());
+  const filtered = borrowedBooks.filter((r) => {
+    const matchSearch = r.bookId.title.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === "All" || r.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const active = RECORDS.filter((r) => r.status === "Active").length;
-  const dueSoon = RECORDS.filter((r) => r.status === "Due Soon").length;
-  const overdue = RECORDS.filter((r) => r.status === "Overdue").length;
+
+  const active = borrowedBooks.filter((r) => r.status === "Active").length;
+  const dueSoon = borrowedBooks.filter((r) => r.status === "Active" && Number(r.dueDate) < Date.now() + 7 * 24 * 60 * 60 * 1000).length;
+  const overdue = borrowedBooks.filter((r) => {
+    return Number(r.dueDate) < Date.now()
+  }).length;
 
   return (
     <div className="space-y-5">
@@ -80,11 +91,10 @@ function StudentBorrowRecords() {
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                statusFilter === s
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "bg-white border border-gray-200 text-gray-600 hover:border-emerald-300"
-              }`}
+              className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all ${statusFilter === s
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "bg-white border border-gray-200 text-gray-600 hover:border-emerald-300"
+                }`}
             >
               {s}
             </button>
@@ -113,8 +123,8 @@ function StudentBorrowRecords() {
                         <BookOpen size={15} className="text-emerald-500" />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-800">{record.title}</p>
-                        <p className="text-xs text-gray-400">{record.author}</p>
+                        <p className="font-semibold text-gray-800">{record.bookId.title}</p>
+                        <p className="text-xs text-gray-400">{record.bookId.author}</p>
                       </div>
                     </div>
                   </td>

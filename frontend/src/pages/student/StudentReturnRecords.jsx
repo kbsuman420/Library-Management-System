@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, BookCheck, DollarSign, CheckCircle, Clock } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
 
 const RECORDS = [
   { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", borrowDate: "2026-04-10", returnDate: "2026-04-24", dueDate: "2026-04-25", fine: 0, status: "On Time" },
@@ -23,15 +24,19 @@ function StatusBadge({ status }) {
 }
 
 function StudentReturnRecords() {
+
+  const borrowedBooks = useOutletContext()
+  const returnBooks = borrowedBooks.filter((r) => r.status === "Returned");
+
   const [search, setSearch] = useState("");
 
-  const filtered = RECORDS.filter((r) =>
-    r.title.toLowerCase().includes(search.toLowerCase())
+  const filtered = returnBooks.filter((r) =>
+    r.bookId.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalReturned = RECORDS.length;
-  const onTime = RECORDS.filter((r) => r.status === "On Time").length;
-  const totalFines = RECORDS.reduce((sum, r) => sum + r.fine, 0);
+  const totalReturned = returnBooks.length;
+  const onTime = returnBooks.filter((r) => r.status === "On Time").length;
+  const totalFines = returnBooks.reduce((sum, r) => sum + r.fine, 0);
 
   return (
     <div className="space-y-5">
@@ -97,8 +102,8 @@ function StudentReturnRecords() {
                   {filtered.map((record) => (
                     <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-gray-800">{record.title}</p>
-                        <p className="text-xs text-gray-400">{record.author}</p>
+                        <p className="font-semibold text-gray-800">{record.bookId.title}</p>
+                        <p className="text-xs text-gray-400">{record.bookId.author}</p>
                       </td>
                       <td className="px-5 py-4 text-gray-600">{record.borrowDate}</td>
                       <td className="px-5 py-4 text-emerald-600 font-medium">{record.returnDate}</td>

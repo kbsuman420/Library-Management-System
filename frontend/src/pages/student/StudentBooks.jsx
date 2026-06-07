@@ -1,31 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search, BookOpen, Filter, ChevronDown, CheckCircle, XCircle } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
 
 const ALL_BOOKS = [
-  { id: 1, title: "Clean Code", author: "Robert C. Martin", category: "Programming", available: true, copies: 3, color: "from-blue-400 to-blue-600" },
-  { id: 2, title: "The Great Gatsby", author: "F. Scott Fitzgerald", category: "Fiction", available: true, copies: 5, color: "from-amber-400 to-orange-500" },
-  { id: 3, title: "Design Patterns", author: "Erich Gamma", category: "Programming", available: false, copies: 0, color: "from-purple-400 to-violet-600" },
-  { id: 4, title: "Sapiens", author: "Yuval Noah Harari", category: "History", available: true, copies: 2, color: "from-emerald-400 to-teal-600" },
-  { id: 5, title: "1984", author: "George Orwell", category: "Dystopian", available: false, copies: 0, color: "from-gray-400 to-gray-600" },
-  { id: 6, title: "Atomic Habits", author: "James Clear", category: "Self-Help", available: true, copies: 4, color: "from-pink-400 to-rose-600" },
-  { id: 7, title: "The Pragmatic Programmer", author: "Andrew Hunt", category: "Programming", available: true, copies: 1, color: "from-cyan-400 to-blue-500" },
-  { id: 8, title: "To Kill a Mockingbird", author: "Harper Lee", category: "Fiction", available: true, copies: 3, color: "from-lime-400 to-green-600" },
-  { id: 9, title: "Thinking, Fast and Slow", author: "Daniel Kahneman", category: "Psychology", available: false, copies: 0, color: "from-red-400 to-rose-600" },
-  { id: 10, title: "Deep Work", author: "Cal Newport", category: "Self-Help", available: true, copies: 2, color: "from-indigo-400 to-indigo-600" },
-  { id: 11, title: "Man's Search for Meaning", author: "Viktor Frankl", category: "Psychology", available: true, copies: 3, color: "from-teal-400 to-cyan-600" },
-  { id: 12, title: "The Lean Startup", author: "Eric Ries", category: "Business", available: true, copies: 2, color: "from-yellow-400 to-amber-600" },
+  { color: "from-blue-400 to-blue-600" },
+  { color: "from-amber-400 to-orange-500" },
+  { color: "from-purple-400 to-violet-600" },
+  { color: "from-emerald-400 to-teal-600" },
+  { color: "from-gray-400 to-gray-600" },
+  { color: "from-pink-400 to-rose-600" },
+  { color: "from-cyan-400 to-blue-500" },
+  { color: "from-lime-400 to-green-600" },
+  { color: "from-red-400 to-rose-600" },
+  { color: "from-indigo-400 to-indigo-600" },
+  { color: "from-teal-400 to-cyan-600" },
+  { color: "from-yellow-400 to-amber-600" },
 ];
 
-const CATEGORIES = ["All", "Programming", "Fiction", "History", "Dystopian", "Self-Help", "Psychology", "Business"];
+const CATEGORIES = ["All", "Science", "Engineering", "Arts", "Commerce", "Others"];
 
-function BookCard({ book, onBorrow }) {
+function BookCard({ book, onBorrow, index, borrowedBooks }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group flex flex-col">
       {/* Book Cover */}
-      <div className={`bg-gradient-to-br ${book.color} p-6 flex items-center justify-center relative h-36`}>
+      <div className={`bg-gradient-to-br ${ALL_BOOKS[index % ALL_BOOKS.length].color} p-6 flex items-center justify-center relative h-36`}>
         <BookOpen size={48} className="text-white opacity-70" />
         <div className="absolute top-3 right-3">
-          {book.available
+          {book.availableCopies > 0 && book.status === "Available"
             ? <span className="flex items-center gap-1 bg-white/90 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm"><CheckCircle size={10} /> Available</span>
             : <span className="flex items-center gap-1 bg-white/90 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm"><XCircle size={10} /> Borrowed</span>
           }
@@ -42,13 +43,12 @@ function BookCard({ book, onBorrow }) {
           <button
             onClick={() => onBorrow(book)}
             disabled={!book.available}
-            className={`w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
-              book.available
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-emerald-200"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed"
-            }`}
+            className={`w-full py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${book.available
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow-emerald-200"
+              : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              }`}
           >
-            {book.available ? "Borrow Book" : "Not Available"}
+            {borrowedBooks.some((b) => b.bookId._id === book.id) ? "Book Borrowed" : "Borrow Book"}
           </button>
         </div>
       </div>
@@ -57,12 +57,40 @@ function BookCard({ book, onBorrow }) {
 }
 
 function StudentBooks() {
+
+  const borrowedBooks = useOutletContext();
+  console.log(borrowedBooks)
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [availFilter, setAvailFilter] = useState("All");
   const [borrowedId, setBorrowedId] = useState(null);
 
-  const filtered = ALL_BOOKS.filter((b) => {
+  const [books, setBooks] = useState([]);
+  const [error, setError] = useState("");
+
+  const getAllBooks = async () => {
+    try {
+      const req = await fetch("http://localhost:8001/api/books");
+      const res = await req.json();
+
+      if (res.statusCode !== 200) {
+        throw new Error(res.message);
+      }
+
+      setBooks(res.data);
+    } catch (error) {
+      setError(error.message);
+    }
+  }
+
+
+  useEffect(() => {
+    getAllBooks()
+  }, [])
+
+
+  const filtered = books.filter((b) => {
     const matchSearch = b.title.toLowerCase().includes(search.toLowerCase()) || b.author.toLowerCase().includes(search.toLowerCase());
     const matchCat = category === "All" || b.category === category;
     const matchAvail = availFilter === "All" || (availFilter === "Available" ? b.available : !b.available);
@@ -128,8 +156,8 @@ function StudentBooks() {
       {/* Books Grid */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filtered.map((book) => (
-            <BookCard key={book.id} book={book} onBorrow={handleBorrow} />
+          {filtered.map((book, index) => (
+            <BookCard key={book._id} book={book} onBorrow={handleBorrow} index={index} borrowedBooks={borrowedBooks} />
           ))}
         </div>
       ) : (

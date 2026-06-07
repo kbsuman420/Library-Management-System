@@ -13,25 +13,26 @@ const borrowRecordSchema = new mongoose.Schema({
     },
     borrowDate: {
         type: String,
-        default: Date.now
+        default: Date.now,
     },
     dueDate: {
         type: String,
+        default: Date.now,
         required: true
     },
     returnDate: {
-        type: Date
+        type: String
     },
     status: {
         type: String,
-        enum: ["borrowed", "returned"],
-        default: "borrowed"
+        enum: ["Active", "Returned"],
+        default: "Active"
     },
     fine: {
         type: Number,
         default: 0
     }
-}, {timestamps: true})
+}, { timestamps: true })
 
 borrowRecordSchema.index({ userId: 1 });
 borrowRecordSchema.index({ bookId: 1 });

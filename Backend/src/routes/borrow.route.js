@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {borrowBook, returnBook, allBorrowBooks} from "../controllers/borrowController.controller.js"
+import { borrowBook, returnBook, allBorrowBooks, getAllBorrowBooks, getUserBorrows } from "../controllers/borrowController.controller.js"
 
 
 const borrowRouter = Router();
@@ -10,8 +10,10 @@ const borrowRouter = Router();
 // PATCH /borrow/:borrowId/return
 // GET /my-books
 
-borrowRouter.route("/borrow/:bookId").post(borrowBook)
-borrowRouter.route("/borrow/:borrowId/return").patch(returnBook);
+borrowRouter.route("/").post(borrowBook)
+borrowRouter.route("/allBorrows").get(getAllBorrowBooks)
+borrowRouter.route("/return/:borrowId").patch(returnBook);
 borrowRouter.route("/my-books").get(allBorrowBooks);
+borrowRouter.route("/user/:id").get(getUserBorrows);
 
 export { borrowRouter }

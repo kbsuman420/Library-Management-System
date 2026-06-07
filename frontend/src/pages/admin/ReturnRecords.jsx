@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, CheckCircle, DollarSign, BookCheck, TrendingDown } from 'lucide-react';
+
 
 const RECORDS = [
   { id: 1, student: 'Eve Davis', studentId: 'STU008', book: 'The Great Gatsby', returnDate: '2026-05-28', dueDate: '2026-05-25', fine: 3.00, status: 'Fine Paid' },
@@ -25,11 +26,63 @@ function StatusBadge({ status }) {
 }
 
 function ReturnRecords() {
-  const [records, setRecords] = useState(RECORDS);
+  const [records, setRecords] = useState([]);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState("");
 
-  const filtered = records.filter((r) =>
-    r.student.toLowerCase().includes(search.toLowerCase()) || r.book.toLowerCase().includes(search.toLowerCase())
+
+  const fetchAllBorrows = async () => {
+
+    try {
+      const result = await fetch("http://localhost:8001/api/borrow/allBorrows")
+      const data = await result.json();
+      console.log("bo")
+      if (data.statusCode !== 200) {
+        throw new Error(data.message)
+      }
+
+      const returnRecords = data.data.map((d) => {
+        const { fullName, student_id } = d.userId
+        const { title } = d.bookId
+        const { _id, borrowDate, dueDate, status, returnDate } = d;
+
+        const overdueDays = (Number(returnDate) - Number(dueDate)) / 24 * 60 * 60 * 1000;
+        const fine = overdueDays > 0 ? overdueDays * 1 : 0;
+        if (overdueDays > 0 && status != "Fine Paid") {
+          status = "Fine Pending"
+        }
+
+        return {
+          id: _id,
+          student: fullName,
+          studentId: student_id,
+          book: title,
+          dueDate: new Date(Number(dueDate)).toLocaleDateString(),
+          status: status,
+          returnBook: returnDate ? new Date(Number(returnDate)).toLocaleDateString() : "",
+          fine: fine,
+
+        }
+      })
+
+      setRecords(returnRecords);
+
+
+    } catch (error) {
+      console.log(error.message)
+      setError(error.message);
+    }
+  }
+
+  useEffect(() => {
+    fetchAllBorrows();
+  }, [])
+
+  const filtered = records.filter((r) => {
+    console.log(r.student);
+
+    return r.student.toLowerCase().includes(search.toLowerCase()) || r.book.toLowerCase().includes(search.toLowerCase())
+  }
   );
 
   const totalReturned = records.length;
@@ -101,7 +154,7 @@ function ReturnRecords() {
                     <p className="text-xs text-gray-400">{record.studentId}</p>
                   </td>
                   <td className="px-5 py-4 font-medium text-indigo-700">{record.book}</td>
-                  <td className="px-5 py-4 text-emerald-600 font-medium">{record.returnDate}</td>
+                  <td className="px-5 py-4 text-emerald-600 font-medium">{record.returnBook}</td>
                   <td className="px-5 py-4 text-gray-600">{record.dueDate}</td>
                   <td className="px-5 py-4 text-center">
                     <span className={`font-bold text-sm ${record.fine > 0 ? 'text-red-500' : 'text-gray-400'}`}>

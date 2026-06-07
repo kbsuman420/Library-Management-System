@@ -1,21 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Plus, BookOpen, Edit2, Trash2, ChevronDown, Filter, X, Save } from 'lucide-react';
 
 const BOOKS = [
-  { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', category: 'Fiction', isbn: '978-0-7432-7356-5', copies: 5, available: 3, status: 'Available' },
-  { id: 2, title: 'To Kill a Mockingbird', author: 'Harper Lee', category: 'Fiction', isbn: '978-0-06-112008-4', copies: 4, available: 0, status: 'Borrowed' },
-  { id: 3, title: '1984', author: 'George Orwell', category: 'Dystopian', isbn: '978-0-452-28423-4', copies: 6, available: 4, status: 'Available' },
-  { id: 4, title: 'Clean Code', author: 'Robert C. Martin', category: 'Programming', isbn: '978-0-13-235088-4', copies: 3, available: 1, status: 'Available' },
-  { id: 5, title: 'Design Patterns', author: 'Erich Gamma', category: 'Programming', isbn: '978-0-20-163361-5', copies: 2, available: 0, status: 'Borrowed' },
-  { id: 6, title: 'The Pragmatic Programmer', author: 'Andrew Hunt', category: 'Programming', isbn: '978-0-13-595705-9', copies: 4, available: 2, status: 'Available' },
-  { id: 7, title: 'Atomic Habits', author: 'James Clear', category: 'Self-Help', isbn: '978-0-73-521129-2', copies: 5, available: 5, status: 'Available' },
-  { id: 8, title: 'Sapiens', author: 'Yuval Noah Harari', category: 'History', isbn: '978-0-06-231609-7', copies: 3, available: 0, status: 'Borrowed' },
+  { id: 1, title: 'The Great Gatsby', author: 'F. Scott Fitzgerald', category: 'Science', isbn: '978-0-7432-7356-5', copies: 5, available: 3, status: 'Available' },
+  { id: 2, title: 'To Kill a Mockingbird', author: 'Harper Lee', category: 'Engineering', isbn: '978-0-06-112008-4', copies: 4, available: 0, status: 'Borrowed' },
+  { id: 3, title: '1984', author: 'George Orwell', category: 'Arts', isbn: '978-0-452-28423-4', copies: 6, available: 4, status: 'Available' },
+  { id: 4, title: 'Clean Code', author: 'Robert C. Martin', category: 'Commerce', isbn: '978-0-13-235088-4', copies: 3, available: 1, status: 'Available' },
+  { id: 5, title: 'Design Patterns', author: 'Erich Gamma', category: 'Commerce', isbn: '978-0-20-163361-5', copies: 2, available: 0, status: 'Borrowed' },
+  { id: 6, title: 'The Pragmatic Programmer', author: 'Andrew Hunt', category: 'Others', isbn: '978-0-13-595705-9', copies: 4, available: 2, status: 'Available' },
+  { id: 7, title: 'Atomic Habits', author: 'James Clear', category: 'Others', isbn: '978-0-73-521129-2', copies: 5, available: 5, status: 'Available' },
+  { id: 8, title: 'Sapiens', author: 'Yuval Noah Harari', category: 'Others', isbn: '978-0-06-231609-7', copies: 3, available: 0, status: 'Borrowed' },
 ];
 
-const CATEGORIES = ['All', 'Fiction', 'Dystopian', 'Programming', 'Self-Help', 'History'];
+const CATEGORIES = ['All', 'Science', 'Engineering', 'Arts', 'Commerce', 'Others'];
 const STATUS_OPTS = ['All', 'Available', 'Borrowed'];
 
-const EMPTY_FORM = { title: '', author: '', category: 'Fiction', isbn: '', copies: '', description: '' };
+const EMPTY_FORM = { title: '', author: '', category: 'Science', totalCopies: '', isbn: '', description: '' };
 
 function StatusBadge({ status }) {
   return (
@@ -27,13 +27,88 @@ function StatusBadge({ status }) {
 }
 
 function Books() {
-  const [books, setBooks] = useState(BOOKS);
+  const [books, setBooks] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState(null);
+
+  const [message, setMessage] = useState("")
+  const [error, setError] = useState('');
+
+  const [borrowFormOpen, setBorrowFormOpen] = useState(false);
+  const [borrowForm, setBorrowForm] = useState({ bookId: '', student_id: '' });
+
+
+
+  const borrowFormOpenHandler = (bookId) => {
+    setBorrowForm({ ...borrowForm, bookId });
+    setBorrowFormOpen(true);
+  }
+
+  const borrowFormCloseHandler = () => {
+    setBorrowFormOpen(false);
+    setBorrowForm({ bookId: '', student_id: '' });
+    setError('');
+  }
+
+  const borrowFormChange = (e) => {
+    setBorrowForm({ ...borrowForm, [e.target.name]: e.target.value });
+  }
+
+  const borrowFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!borrowForm.bookId || !borrowForm.student_id) {
+      setError("All fields are required");
+      return;
+    }
+    try {
+      const response = await fetch("http://localhost:8001/api/borrow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(borrowForm)
+      })
+      const data = await response.json();
+      if (data.statusCode !== 200) {
+        throw new Error(data.message);
+      }
+      setBorrowForm({ bookId: '', student_id: '' });
+      borrowFormCloseHandler();
+      setMessage(response.message)
+      setTimeout(() => {
+        setMessage("");
+      }, 2000);
+
+      setBorrowFormOpen(false);
+    } catch (error) {
+      console.log(error);
+      setError("Something went wrong");
+    }
+
+  }
+
+  const fetchBooks = async () => {
+    try {
+      const response = await fetch("http://localhost:8001/api/books");
+      const data = await response.json();
+      if (data.statusCode !== 200) {
+        throw new Error(data.message);
+      }
+      setBooks(data.data);
+    }
+    catch (error) {
+      console.log(error);
+      setError("Something went wrong");
+    }
+  }
+
+  useEffect(() => {
+    fetchBooks();
+  }, [])
 
   const filtered = books.filter((b) => {
     const matchSearch = b.title.toLowerCase().includes(search.toLowerCase()) || b.author.toLowerCase().includes(search.toLowerCase());
@@ -43,9 +118,10 @@ function Books() {
   });
 
   const openAdd = () => { setForm(EMPTY_FORM); setEditId(null); setShowModal(true); };
-  const openEdit = (book) => {
-    setForm({ title: book.title, author: book.author, category: book.category, isbn: book.isbn, copies: book.copies, description: '' });
-    setEditId(book.id);
+  const openEdit = async (book) => {
+    console.log(book._id)
+    setForm({ title: book.title, author: book.author, category: book.category, isbn: book.isbn, totalCopies: book.totalCopies, description: book.description });
+    setEditId(book._id);
     setShowModal(true);
   };
   const closeModal = () => { setShowModal(false); setEditId(null); };
@@ -55,20 +131,83 @@ function Books() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.author || !form.isbn || !form.copies) return;
-    const copies = parseInt(form.copies) || 1;
-    if (editId) {
-      setBooks((prev) => prev.map((b) => b.id === editId ? { ...b, ...form, copies, available: copies, status: copies > 0 ? 'Available' : 'Borrowed' } : b));
-    } else {
-      const newBook = { id: Date.now(), ...form, copies, available: copies, status: 'Available' };
-      setBooks((prev) => [newBook, ...prev]);
+    if (!form.title || !form.author || !form.isbn || !form.category || !form.totalCopies || !form.description) {
+      console.log(form.title, form.author, form.isbn, form.category, form.totalCopies, form.description)
+      setError("All fields are required");
+      return;
     }
-    closeModal();
-  };
+    if (editId) {
+      try {
+        const res = await fetch(`http://localhost:8001/api/books/${editId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(form)
+        })
 
-  const handleDelete = (id) => setBooks((prev) => prev.filter((b) => b.id !== id));
+        const data = await res.json();
+        if (data.statusCode !== 200) {
+          console.log("error", data.message)
+          throw new Error(data.message);
+        }
+        console.log("hi")
+        fetchBooks();
+        setMessage(data.message)
+        closeModal()
+        setForm(data.data);
+      } catch (error) {
+        console.log(error);
+        setError("Something went wrong");
+      }
+    } else {
+      try {
+        const result = await fetch("http://localhost:8001/api/books/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(form)
+        })
+        const res = await result.json();
+        if (res.statusCode !== 200) {
+          throw new Error(res.message)
+        } else {
+          await fetchBooks();
+        }
+        console.log(res.message);
+        closeModal();
+      }
+      catch (error) {
+        console.log(error);
+        setError("Something went wrong");
+      }
+    };
+  }
+
+  const handleDelete = async (id) => {
+    console.log(id)
+    try {
+      const response = await fetch(`http://localhost:8001/api/books/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json"
+        },
+      })
+      const data = await response.json();
+      if (data.statusCode !== 200) {
+        throw new Error(data.message);
+      }
+      fetchBooks();
+      setMessage(data.message);
+    }
+    catch (error) {
+      console.log(error);
+      setError("Something went wrong");
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -135,6 +274,7 @@ function Books() {
                 <th className="px-5 py-3.5 text-left font-semibold">ISBN</th>
                 <th className="px-5 py-3.5 text-center font-semibold">Copies</th>
                 <th className="px-5 py-3.5 text-center font-semibold">Status</th>
+                <th className="px-5 py-3.5 text-center font-semibold">Borrow</th>
                 <th className="px-5 py-3.5 text-center font-semibold">Actions</th>
               </tr>
             </thead>
@@ -157,16 +297,21 @@ function Books() {
                   </td>
                   <td className="px-5 py-4 text-gray-500 font-mono text-xs">{book.isbn}</td>
                   <td className="px-5 py-4 text-center">
-                    <span className="font-semibold text-gray-700">{book.available}</span>
-                    <span className="text-gray-400 text-xs">/{book.copies}</span>
+                    <span className="font-semibold text-gray-700">{book.availableCopies}</span>
+                    <span className="text-gray-400 text-xs">/{book.totalCopies}</span>
                   </td>
                   <td className="px-5 py-4 text-center"><StatusBadge status={book.status} /></td>
-                  <td className="px-5 py-4">
+                  <td className="px-5 py-4 text-center">
+                    <button onClick={() => borrowFormOpenHandler(book._id)} className="w-full mt-3 flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-indigo-200 text-indigo-600 text-xs font-semibold hover:bg-indigo-50 transition-colors">
+                      Borrow
+                    </button>
+                  </td>
+                  <td className="px-5 py-4 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <button onClick={() => openEdit(book)} className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
                         <Edit2 size={15} />
                       </button>
-                      <button onClick={() => handleDelete(book.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                      <button onClick={() => handleDelete(book._id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -204,6 +349,11 @@ function Books() {
               <span className="px-2 py-1 bg-gray-100 rounded-lg font-medium text-gray-600">{book.category}</span>
               <span>{book.available}/{book.copies} available</span>
             </div>
+
+            <button onClick={() => borrowFormOpenHandler(book._id)} className="w-full mt-3 flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-indigo-200 text-indigo-600 text-xs font-semibold hover:bg-indigo-50 transition-colors">
+              <Edit2 size={13} /> Borrow
+            </button>
+
             <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
               <button onClick={() => openEdit(book)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-indigo-200 text-indigo-600 text-xs font-semibold hover:bg-indigo-50 transition-colors">
                 <Edit2 size={13} /> Edit
@@ -237,7 +387,7 @@ function Books() {
                 { label: 'Title', name: 'title', type: 'text', placeholder: 'Enter book title' },
                 { label: 'Author', name: 'author', type: 'text', placeholder: 'Enter author name' },
                 { label: 'ISBN', name: 'isbn', type: 'text', placeholder: 'e.g. 978-0-00-000000-0' },
-                { label: 'Total Copies', name: 'copies', type: 'number', placeholder: 'Number of copies' },
+                { label: 'Total Copies', name: 'totalCopies', type: 'number', placeholder: 'Number of copies' },
               ].map(({ label, name, type, placeholder }) => (
                 <div key={name}>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
@@ -261,7 +411,7 @@ function Books() {
                   onChange={handleFormChange}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition"
                 >
-                  {CATEGORIES.filter((c) => c !== 'All').map((c) => <option key={c}>{c}</option>)}
+                  {CATEGORIES.filter((c) => c !== 'All').map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
@@ -288,6 +438,32 @@ function Books() {
           </div>
         </div>
       )}
+
+      {borrowFormOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-5 border-b border-gray-100">
+              <h2 className="text-lg font-semibold">Borrow Book</h2>
+
+              <button onClick={borrowFormCloseHandler} className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition">
+                <X size={17} />
+              </button>
+            </div>
+            {error && <div className="text-red-600 text-lg pl-5">{error}</div>}
+            <form onSubmit={borrowFormSubmit} className="p-5 space-y-3">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Student ID</label>
+                <input type="text" name="student_id" value={borrowForm.student_id} onChange={borrowFormChange} required className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition" />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button type="submit" className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-colors">Borrow</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -3,6 +3,7 @@ import {
   Mail, Phone, Hash, Shield, BookOpen, BookCheck,
   Edit2, Lock, X, Save, Calendar, CheckCircle
 } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
 
 const INITIAL_STUDENT = {
   name: "Alex Student",
@@ -18,13 +19,17 @@ const INITIAL_STUDENT = {
 
 const INFO_ITEMS = [
   { icon: <Mail size={16} />, label: "Email", key: "email" },
-  { icon: <Phone size={16} />, label: "Phone", key: "phone" },
-  { icon: <Hash size={16} />, label: "Student ID", key: "studentId" },
-  { icon: <BookOpen size={16} />, label: "Department", key: "department" },
-  { icon: <Calendar size={16} />, label: "Member Since", key: "joined" },
+  { icon: <Hash size={16} />, label: "Student ID", key: "student_id" },
+
 ];
 
 function StudentProfile() {
+
+  const borrows = useOutletContext()
+  const totalBorrows = borrows.length;
+  const totalReturns = borrows.filter((b) => b.status === "Returned").length;
+
+
   const [student, setStudent] = useState(INITIAL_STUDENT);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -32,6 +37,18 @@ function StudentProfile() {
   const [passForm, setPassForm] = useState({ current: "", next: "", confirm: "" });
   const [passError, setPassError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  console.log("email: ", localStorage.getItem("email"));
+  console.log("name: ", localStorage.getItem("fullName"));
+
+  const userDetails = {
+    name: localStorage.getItem("fullName"),
+    email: localStorage.getItem("email"),
+    student_id: "STU001"
+  }
+
+
+
 
   const handleEditSave = (e) => {
     e.preventDefault();
@@ -87,20 +104,19 @@ function StudentProfile() {
 
           <div className="pt-12 sm:pt-11 text-center sm:text-left sm:ml-28">
             <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
-              <h2 className="text-xl font-extrabold text-gray-900">{student.name}</h2>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold w-fit mx-auto sm:mx-0 ${
-                student.membershipStatus === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"
-              }`}>
+              <h2 className="text-xl font-extrabold text-gray-900">{userDetails.name}</h2>
+              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold w-fit mx-auto sm:mx-0 ${userDetails.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"
+                }`}>
                 <Shield size={10} />
-                {student.membershipStatus} Member
+                {/* {userDetails.status} Member */}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-0.5">{student.email}</p>
-            <p className="text-xs text-gray-400">{student.studentId} · {student.department}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{userDetails.email}</p>
+            <p className="text-xs text-gray-400">{userDetails.student_id}</p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-5">
+          {/* <div className="flex flex-col sm:flex-row gap-3 mt-5">
             <button
               onClick={() => { setEditForm({ name: student.name, phone: student.phone, department: student.department }); setShowEditModal(true); }}
               className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all active:scale-95 text-sm flex-1 sm:flex-none"
@@ -113,15 +129,15 @@ function StudentProfile() {
             >
               <Lock size={14} /> Change Password
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
       {/* Borrowing Summary */}
       <div className="grid grid-cols-2 gap-4">
         {[
-          { label: "Total Borrowed", value: student.totalBorrowed, icon: <BookOpen size={20} />, color: "bg-emerald-50 text-emerald-600", border: "border-emerald-100" },
-          { label: "Total Returned", value: student.totalReturned, icon: <BookCheck size={20} />, color: "bg-blue-50 text-blue-600", border: "border-blue-100" },
+          { label: "Total Borrowed", value: totalBorrows, icon: <BookOpen size={20} />, color: "bg-emerald-50 text-emerald-600", border: "border-emerald-100" },
+          { label: "Total Returned", value: totalReturns, icon: <BookCheck size={20} />, color: "bg-blue-50 text-blue-600", border: "border-blue-100" },
         ].map(({ label, value, icon, color, border }) => (
           <div key={label} className={`bg-white rounded-2xl border ${border} shadow-sm p-5 flex items-center gap-4`}>
             <div className={`p-3 rounded-xl ${color} flex-shrink-0`}>{icon}</div>
@@ -137,12 +153,12 @@ function StudentProfile() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h3 className="text-base font-bold text-gray-800 mb-5">Account Details</h3>
         <div className="space-y-4">
-          {INFO_ITEMS.map(({ icon, label, key }) => (
+          {INFO_ITEMS.map(({ icon, label, key }, index) => (
             <div key={key} className="flex items-start gap-4">
               <div className="p-2 bg-gray-100 rounded-lg text-gray-500 flex-shrink-0 mt-0.5">{icon}</div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
-                <p className="text-sm font-medium text-gray-800 mt-0.5 break-words">{student[key]}</p>
+                <p className="text-sm font-medium text-gray-800 mt-0.5 break-words">{userDetails[key]}</p>
               </div>
             </div>
           ))}
