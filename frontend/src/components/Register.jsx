@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     Mail,
     Lock,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 function Register() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -22,6 +23,7 @@ function Register() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [errorMessage, setErrorMessage] = useState("");
 
     const validate = () => {
         const newErrors = {};
@@ -68,17 +70,27 @@ function Register() {
             return;
         }
         setIsLoading(true);
+
         // TODO: connect to API
-        const result = await fetch('http://localhost:8001/api/users/register', {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
-        });
-        const data = await result.json();
-        console.log(data.data)
+        try {
+            const result = await fetch('http://localhost:8001/api/users/register', {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+            if (!result.ok) {
+                const errorData = await result.json();
+                throw new Error(errorData.message || "Registration failed");
+            }
+            return navigate("/login")
+        } catch (error) {
+            setErrorMessage("Registration Error:", error.message)
+            console.error(error.message);
+        }
         setIsLoading(false);
+        
     };
 
     const fields = [
@@ -132,7 +144,7 @@ function Register() {
                     <h2 className="text-lg font-bold text-gray-800 mb-3">
                         Create Account
                     </h2>
-
+                    {errorMessage && <p className="text-red-500">{errorMessage} Email already registered</p>}
                     <form onSubmit={handleSubmit} noValidate>
                         {/* Text / Email / Phone fields */}
                         {fields.map(({ id, label, name, type, placeholder, autoComplete, icon }) => (

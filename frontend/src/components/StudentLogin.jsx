@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, BookOpen, LogIn } from "lucide-react";
 
 function StudentLogin() {
+
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -47,7 +49,30 @@ function StudentLogin() {
         }
         setIsLoading(true);
         // TODO: connect to API
-        await new Promise((res) => setTimeout(res, 1500));
+        (async () => {
+            const result = await fetch("http://localhost:8001/api/users/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+            if (!result.ok) {
+                const errorData = await result.json();
+                throw new Error(errorData.message || "Logoin Falied");
+            }
+            const res = await result.json();
+            localStorage.setItem("_id", res.data._id)
+            localStorage.setItem("fullName", res.data.fullName);
+            localStorage.setItem("email", res.data.email);
+            localStorage.setItem("role", res.data.role);
+            localStorage.setItem("student_id", res.data.student_id);
+
+            return navigate("/student-dashboard");
+
+
+        })()
+
         setIsLoading(false);
     };
 
@@ -95,9 +120,8 @@ function StudentLogin() {
                                     value={formData.email}
                                     onChange={handleChange}
                                     aria-describedby={errors.email ? "email-error" : undefined}
-                                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm bg-gray-50 text-gray-900 placeholder-gray-400 transition-all duration-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                                        errors.email ? "border-red-400 ring-1 ring-red-300" : "border-gray-200"
-                                    }`}
+                                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm bg-gray-50 text-gray-900 placeholder-gray-400 transition-all duration-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.email ? "border-red-400 ring-1 ring-red-300" : "border-gray-200"
+                                        }`}
                                 />
                             </div>
                             {errors.email && (
@@ -128,9 +152,8 @@ function StudentLogin() {
                                     value={formData.password}
                                     onChange={handleChange}
                                     aria-describedby={errors.password ? "password-error" : undefined}
-                                    className={`w-full pl-10 pr-11 py-2.5 rounded-xl border text-sm bg-gray-50 text-gray-900 placeholder-gray-400 transition-all duration-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                                        errors.password ? "border-red-400 ring-1 ring-red-300" : "border-gray-200"
-                                    }`}
+                                    className={`w-full pl-10 pr-11 py-2.5 rounded-xl border text-sm bg-gray-50 text-gray-900 placeholder-gray-400 transition-all duration-200 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.password ? "border-red-400 ring-1 ring-red-300" : "border-gray-200"
+                                        }`}
                                 />
                                 <button
                                     type="button"

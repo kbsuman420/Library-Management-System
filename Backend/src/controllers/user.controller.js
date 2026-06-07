@@ -10,10 +10,10 @@ const registerUserFn = async (req, res) => {
     // create a object and enter in db
     // check the user creation
     // remove password and send res
-    const { fullname, email, password, role, phone } = req.body;
+    const { fullName, email, password, role, phone } = req.body;
 
     if (
-        [fullname, email, password, role, phone].some((field) => field.trim() == "")
+        [fullName, email, password, role, phone].some((field) => field.trim() == "")
     ) {
         throw new ApiError(400, "All fields are required")
     }
@@ -21,9 +21,23 @@ const registerUserFn = async (req, res) => {
     if (existedUser) {
         throw new ApiError(401, "Email address already used")
     }
+    const lastStudent = await User.findOne({
+        student_Id: { $exists: true }
+    }).sort({ createdAt: -1 });
+
+    let nextNumber = 1;
+
+    if (lastStudent) {
+        nextNumber =
+            parseInt(lastStudent.student_id.replace("STU", "")) + 1;
+    }
+
+    const student_id = `STU${String(nextNumber).padStart(3, "0")}`;
+
     const user = await User.create(
         {
-            fullname,
+            fullName,
+            student_id,
             email,
             password,
             role,
@@ -34,7 +48,8 @@ const registerUserFn = async (req, res) => {
     const createdUser = await User.findById(user._id).select(
         "-password"
     )
-    console.log(createdUser);
+    // const accessToken = createdUser.generateAccessToken();
+    // const refreshToken = createdUser.generateRefreshToken();
     res.status(200).json(new ApiResponse(201, createdUser, "User Register Successfully"))
 
 
@@ -61,6 +76,7 @@ const loginUserFn = async (req, res) => {
     const loginUser = await User.findById(user._id).select(
         "-password"
     )
+
     res.status(200).json(new ApiResponse(201, loginUser, "Login Successfully"))
 }
 

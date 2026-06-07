@@ -9,6 +9,12 @@ const bookSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    category: {
+        type: String,
+        require: true,
+        enum: ["Science", "Engineering", "Arts", "Commerce", "Others"],
+        default: "Others"
+    },
     isbn: {
         type: String,
         required: true,

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Clock, BookOpen, AlertCircle, CheckCircle, Filter } from 'lucide-react';
 
 const RECORDS = [
@@ -26,22 +26,89 @@ function StatusBadge({ status }) {
 }
 
 function BorrowRecords() {
-  const [records, setRecords] = useState(RECORDS);
+  const [records, setRecords] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [error, setError] = useState("");
 
   const filtered = records.filter((r) => {
-    const matchSearch = r.student.toLowerCase().includes(search.toLowerCase()) || r.book.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = r.fullName.toLowerCase().includes(search.toLowerCase()) || r.title.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'All' || r.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const handleMarkReturned = (id) => setRecords((prev) => prev.filter((r) => r.id !== id));
+  const handleMarkReturned = async (id) => {
+    console.log(id)
+    if (!confirm("Are You sure to mark this book as returned")) {
+      return;
+    }
+    try {
+      const result = await fetch(`http://localhost:8001/api/borrow/return/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      const data = await result.json();
+      if (data.statusCode !== 200) {
+        throw new Error(data.message)
+      }
+      console.log(data.data);
+      fetchBorrows();
+    } catch (error) {
+      console.log(error.me)
+    }
+  }
 
   const total = records.length;
   const active = records.filter((r) => r.status === 'Active').length;
   const overdue = records.filter((r) => r.status === 'Overdue').length;
 
+  const fetchBorrows = async () => {
+    try {
+      const result = await fetch("http://localhost:8001/api/borrow/allBorrows");
+      const data = await result.json();
+      if (data.statusCode !== 200) {
+        throw new Error(data.message);
+      }
+      const borrowsArray = data.data.map((borrow) => {
+
+        const { fullName, student_id } = borrow.userId
+        const { title } = borrow.bookId
+        const { _id, borrowDate, dueDate, status } = borrow;
+
+        let newStatus = status;
+
+        if (dueDate < Date.now() && newStatus === "Active" && status !== "RETURNED") {
+          newStatus = "Overdue"
+          console.log(newStatus)
+        }
+
+        console.log(dueDate, Date.now());
+
+
+        const formattedBorrowDate = new Date(Number(borrowDate)).toLocaleDateString();
+        const formattedDueDate = new Date(Number(dueDate)).toLocaleDateString();
+        console.log({ _id, fullName, student_id, title, formattedBorrowDate, formattedDueDate, newStatus })
+        if (status === "RETURNED") {
+          return;
+        }
+        return { _id, fullName, student_id, title, formattedBorrowDate, formattedDueDate, status }
+      })
+
+      const BorrowRecords = borrowsArray.filter((borrow) => borrow.status !== "Returned");
+
+      setRecords(BorrowRecords);
+    } catch (error) {
+      console.log(error);
+      setError(error.message);
+    }
+  }
+
+  useEffect(() => {
+    fetchBorrows()
+  }, [])
+  console.log(records.length)
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -109,18 +176,18 @@ function BorrowRecords() {
               {filtered.map((record) => (
                 <tr key={record.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-4">
-                    <p className="font-semibold text-gray-800">{record.student}</p>
-                    <p className="text-xs text-gray-400">{record.studentId}</p>
+                    <p className="font-semibold text-gray-800">{record.fullName}</p>
+                    <p className="text-xs text-gray-400">{record.student_id}</p>
                   </td>
-                  <td className="px-5 py-4 font-medium text-indigo-700">{record.book}</td>
-                  <td className="px-5 py-4 text-gray-600">{record.borrowDate}</td>
+                  <td className="px-5 py-4 font-medium text-indigo-700">{record.title}</td>
+                  <td className="px-5 py-4 text-gray-600">{record.formattedBorrowDate}</td>
                   <td className={`px-5 py-4 font-semibold ${record.status === 'Overdue' ? 'text-red-500' : 'text-gray-600'}`}>
-                    {record.dueDate}
+                    {record.formattedDueDate}
                   </td>
                   <td className="px-5 py-4 text-center"><StatusBadge status={record.status} /></td>
                   <td className="px-5 py-4 text-center">
                     <button
-                      onClick={() => handleMarkReturned(record.id)}
+                      onClick={() => handleMarkReturned(record._id)}
                       className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors active:scale-95"
                     >
                       Mark Returned

@@ -1,10 +1,12 @@
 import { BookOpen, Clock, BookCheck, AlertCircle, ArrowUpRight, Zap, Search, RotateCcw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 
 const STATS = [
-  { label: "Total Borrowed", value: 24, icon: <BookOpen size={20} />, color: "bg-emerald-50 text-emerald-600", border: "border-emerald-100", change: "+3 this month" },
-  { label: "Currently Borrowed", value: 3, icon: <Clock size={20} />, color: "bg-blue-50 text-blue-600", border: "border-blue-100", change: "Due this week" },
-  { label: "Returned Books", value: 19, icon: <BookCheck size={20} />, color: "bg-violet-50 text-violet-600", border: "border-violet-100", change: "All on time" },
-  { label: "Pending Returns", value: 2, icon: <AlertCircle size={20} />, color: "bg-amber-50 text-amber-600", border: "border-amber-100", change: "Action needed" },
+  { label: "Total Borrowed", value: 0, icon: <BookOpen size={20} />, color: "bg-emerald-50 text-emerald-600", border: "border-emerald-100", change: "+3 this month" },
+  { label: "Currently Borrowed", value: 0, icon: <Clock size={20} />, color: "bg-blue-50 text-blue-600", border: "border-blue-100", change: "Due this week" },
+  { label: "Returned Books", value: 0, icon: <BookCheck size={20} />, color: "bg-violet-50 text-violet-600", border: "border-violet-100", change: "All on time" },
+  { label: "Pending Returns", value: 0, icon: <AlertCircle size={20} />, color: "bg-amber-50 text-amber-600", border: "border-amber-100", change: "Action needed" },
 ];
 
 const RECENT_BORROWED = [
@@ -32,6 +34,28 @@ const STATUS_STYLE = {
 };
 
 function StudentDashboard() {
+  const [recentBorrowed, setRecentBorrowed] = useState([])
+
+  const borrowedBooks = useOutletContext()
+
+  useEffect(() => {
+    if (borrowedBooks.length > 0) {
+      setRecentBorrowed(borrowedBooks.slice(0, 3))
+    } else {
+      setRecentBorrowed(borrowedBooks)
+    }
+    console.log(borrowedBooks)
+  }, [borrowedBooks])
+
+
+  const activeBorrowes = borrowedBooks.filter((item) => item.status === "Active")
+  console.log(activeBorrowes)
+  const returnedBorrowed = borrowedBooks.filter((item) => item.status === "Returned")
+  console.log(returnedBorrowed)
+  const value = [borrowedBooks.length, activeBorrowes.length, returnedBorrowed.length, activeBorrowes.length]
+  const updatedStats = STATS.map((stat, index) => ({ ...stat, value: value[index] }))
+  console.log(updatedStats)
+
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
@@ -43,7 +67,7 @@ function StudentDashboard() {
         <div className="relative">
           <p className="text-emerald-200 text-sm font-medium mb-1">Good afternoon 👋</p>
           <h1 className="text-2xl sm:text-3xl font-extrabold mb-1">Welcome back, Alex!</h1>
-          <p className="text-emerald-200 text-sm">You have <span className="text-white font-bold">2 books</span> due soon. Don't forget to return them.</p>
+          <p className="text-emerald-200 text-sm">You have <span className="text-white font-bold">{activeBorrowes.length} books</span> due soon. Don't forget to return them.</p>
         </div>
         <div className="absolute right-4 bottom-0 opacity-20 hidden sm:block">
           <BookOpen size={96} />
@@ -52,7 +76,7 @@ function StudentDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        {STATS.map((s) => (
+        {updatedStats.map((s) => (
           <div key={s.label} className={`bg-white rounded-2xl border ${s.border} shadow-sm p-4 flex items-center gap-3 hover:shadow-md transition-all duration-200`}>
             <div className={`p-2.5 rounded-xl ${s.color} flex-shrink-0`}>{s.icon}</div>
             <div className="min-w-0">
@@ -75,13 +99,13 @@ function StudentDashboard() {
             <a href="/student-dashboard/borrow-records" className="text-xs text-emerald-600 font-semibold hover:underline">View all</a>
           </div>
           <div className="divide-y divide-gray-50">
-            {RECENT_BORROWED.map((book) => (
+            {recentBorrowed.map((book) => (
               <div key={book.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors">
                 <div className={`w-10 h-14 rounded-lg ${book.cover} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                  <BookOpen size={18} className="text-white" />
+                  📗
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-800 text-sm truncate">{book.title}</p>
+                  <p className="font-bold text-gray-800 text-sm truncate">{book.bookId.title}</p>
                   <p className="text-xs text-gray-500 truncate">{book.author}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Due: {book.dueDate}</p>
                 </div>

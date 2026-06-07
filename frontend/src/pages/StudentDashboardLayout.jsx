@@ -1,8 +1,11 @@
-import { useState } from "react";
-import { Outlet, NavLink, useNavigate, Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, NavLink, useNavigate, Navigate, replace } from "react-router-dom";
 import {
   LayoutDashboard, BookOpen, ClipboardList, CheckSquare,
-  User, LogOut, X, Menu, Bell, ChevronRight
+  User, LogOut, X, Menu, Bell, ChevronRight,
+  Clock,
+  BookCheck,
+  AlertCircle
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -13,7 +16,7 @@ const NAV_ITEMS = [
   { label: "Profile", path: "/student-dashboard/profile", icon: <User size={20} /> },
 ];
 
-function StudentSidebar({ isOpen, setIsOpen, handleLogout }) {
+function StudentSidebar({ isOpen, setIsOpen, handleLogout, userDetails }) {
 
   return (
     <>
@@ -53,8 +56,8 @@ function StudentSidebar({ isOpen, setIsOpen, handleLogout }) {
               <span className="text-sm font-bold text-emerald-900">AS</span>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white truncate">Alex Student</p>
-              <p className="text-xs text-emerald-300 truncate">STU-2024-001</p>
+              <p className="text-sm font-semibold text-white truncate">{userDetails.name}</p>
+              <p className="text-xs text-emerald-300 truncate">{userDetails.studentId}</p>
             </div>
           </div>
         </div>
@@ -102,7 +105,7 @@ function StudentSidebar({ isOpen, setIsOpen, handleLogout }) {
   );
 }
 
-function StudentHeader({ setIsOpen }) {
+function StudentHeader({ setIsOpen, userDetails }) {
   return (
     <header className="h-16 bg-white border-b border-gray-100 shadow-sm flex items-center justify-between px-4 sm:px-6 sticky top-0 z-30">
       <div className="flex items-center gap-3">
@@ -127,10 +130,10 @@ function StudentHeader({ setIsOpen }) {
 
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-            <span className="text-xs font-bold text-white">AS</span>
+            <span className="text-lg font-bold text-white">{userDetails.name ? userDetails.name[0] : "AS"}</span>
           </div>
           <div className="hidden sm:block">
-            <p className="text-sm font-semibold text-gray-800">Alex Student</p>
+            <p className="text-sm font-semibold text-gray-800">{userDetails.name}</p>
             <p className="text-xs text-gray-400">Active Member</p>
           </div>
         </div>
@@ -140,7 +143,17 @@ function StudentHeader({ setIsOpen }) {
 }
 
 function StudentDashboardLayout() {
+  const [userDetails, setUserDetails] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const [borrowedBooks, setBorrowedBooks] = useState([]);
+
+
+
+  useEffect(() => {
+    setUserDetails((prev) => ({ ...prev, name: localStorage.getItem("fullName"), email: localStorage.getItem("email"), studentId: localStorage.getItem("student_id") }));
+
+  }, []);
 
   const navigate = useNavigate();
 
@@ -151,24 +164,47 @@ function StudentDashboardLayout() {
     navigate("/login");
   };
 
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const role = localStorage.getItem("role")
 
-  console.log(token);
-  console.log(role);
 
-  if (!token || role !== "student") {
-    console.log("hi")
-    return <Navigate to="/login" />
+  if (!role || role !== "student") {
+    return <Navigate to="/login" replace />
   }
+
+  // const token = localStorage.getItem("token");
+
+  // GetBorrowed Books
+  const getBorrowedBooks = async () => {
+    try {
+      const id = localStorage.getItem("_id");
+      const response = await fetch(`http://localhost:8001/api/borrow/user/${id}`)
+      const data = await response.json();
+      if (!data.message) {
+        throw new Error(data.message)
+      }
+      console.log(data)
+      setBorrowedBooks(data.data)
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    getBorrowedBooks()
+  }, [])
+
+
+
+
+
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <StudentSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} handleLogout={handleLogout} />
+      <StudentSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} handleLogout={handleLogout} userDetails={userDetails} />
       <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
-        <StudentHeader setIsOpen={setIsSidebarOpen} />
+        <StudentHeader setIsOpen={setIsSidebarOpen} userDetails={userDetails} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6">
-          <Outlet />
+          <Outlet context={borrowedBooks} />
         </main>
       </div>
     </div>
