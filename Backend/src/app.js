@@ -1,7 +1,3 @@
-import dotenv from "dotenv"
-
-dotenv.config()
-
 import express, { urlencoded } from "express"
 import cors from "cors"
 import cookieparser from "cookie-parser"
@@ -31,6 +27,9 @@ app.use("/api/users", userrouter)
 app.use("/api/books", bookrouter)
 
 app.use("/api/borrow", borrowRouter)
+
+
+
 
 
 export { app }

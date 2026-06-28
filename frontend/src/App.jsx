@@ -11,6 +11,7 @@ import DashBoardLayout from "./pages/DashBoardLayout"
 import AdminLogin from "./components/AdminLogin"
 import StudentLogin from './components/StudentLogin';
 import Register from './components/Register';
+import RegisterOtpVerified from './components/RegisterOtpVerified';
 
 import StudentDashboardLayout from './pages/StudentDashboardLayout';
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -27,6 +28,7 @@ function App() {
         <Route index element={<StudentLogin />} />
         <Route path="login" element={<StudentLogin />} />
         <Route path="register" element={<Register />} />
+        <Route path="registerOtpVerified" element={<RegisterOtpVerified />} />
       </Route>
       <Route path="admin/login" element={<AdminLogin />} />
 
