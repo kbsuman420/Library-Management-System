@@ -84,13 +84,15 @@ function Register() {
                 const errorData = await result.json();
                 throw new Error(errorData.message || "Registration failed");
             }
-            return navigate("/login")
+            return navigate("/registerOtpVerified", {
+                state: { email: formData.email }
+            })
         } catch (error) {
             setErrorMessage("Registration Error:", error.message)
             console.error(error.message);
         }
         setIsLoading(false);
-        
+
     };
 
     const fields = [

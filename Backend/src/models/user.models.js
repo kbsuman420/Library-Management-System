@@ -29,7 +29,18 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: true
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationOtp: {
+        type: String
+    },
+    verificationTokenExpires: {
+        type: Date
     }
+
 
 }, { timestamps: true })
 
@@ -39,7 +50,14 @@ userSchema.pre("save", async function () {
     this.password = await bcrypt.hash(this.password, 10);
 });
 
+userSchema.methods.isCorrectOtp = async function (otp) {
+    console.log(otp)
+    console.log(this.verificationOtp)
+    return await bcrypt.compare(otp, this.verificationOtp)
+}
+
 userSchema.methods.isCorrectPassword = async function (password) {
+    
     return await bcrypt.compare(password, this.password)
 }
 

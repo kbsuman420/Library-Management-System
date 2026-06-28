@@ -48,30 +48,35 @@ function StudentLogin() {
             return;
         }
         setIsLoading(true);
-        // TODO: connect to API
-        (async () => {
-            const result = await fetch("http://localhost:8001/api/users/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
-            if (!result.ok) {
-                const errorData = await result.json();
-                throw new Error(errorData.message || "Logoin Falied");
-            }
-            const res = await result.json();
-            localStorage.setItem("_id", res.data._id)
-            localStorage.setItem("fullName", res.data.fullName);
-            localStorage.setItem("email", res.data.email);
-            localStorage.setItem("role", res.data.role);
-            localStorage.setItem("student_id", res.data.student_id);
+        try {
 
-            return navigate("/student-dashboard");
+            // TODO: connect to API
+            (async () => {
+                const result = await fetch("http://localhost:8001/api/users/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(formData),
+                });
+                if (!result.ok) {
+                    throw new Error("Logoin Falied");
+                }
+                const res = await result.json();
+                localStorage.setItem("_id", res.data._id)
+                localStorage.setItem("fullName", res.data.fullName);
+                localStorage.setItem("email", res.data.email);
+                localStorage.setItem("role", res.data.role);
+                localStorage.setItem("student_id", res.data.student_id);
+
+                return navigate("/student-dashboard");
 
 
-        })()
+            })()
+
+        } catch (error) {
+            console.log(error.message)
+        }
 
         setIsLoading(false);
     };

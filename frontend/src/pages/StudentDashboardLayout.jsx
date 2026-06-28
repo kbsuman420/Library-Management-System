@@ -18,6 +18,8 @@ const NAV_ITEMS = [
 
 function StudentSidebar({ isOpen, setIsOpen, handleLogout, userDetails }) {
 
+
+
   return (
     <>
       {/* Mobile overlay */}
@@ -148,6 +150,7 @@ function StudentDashboardLayout() {
 
   const [borrowedBooks, setBorrowedBooks] = useState([]);
 
+  // const [borrowDetails, setBorrowDetails] = useState({ totalBorrows: 0, activeBorrows: 0, returnedBorrows: 0 });
 
 
   useEffect(() => {
@@ -161,6 +164,10 @@ function StudentDashboardLayout() {
     console.log("hi")
     localStorage.removeItem("token");
     localStorage.removeItem("role");
+    localStorage.removeItem("_id");
+    localStorage.removeItem("email");
+    localStorage.removeItem("fullName");
+    localStorage.removeItem("student_id");
     navigate("/login");
   };
 
@@ -192,10 +199,6 @@ function StudentDashboardLayout() {
   useEffect(() => {
     getBorrowedBooks()
   }, [])
-
-
-
-
 
 
   return (
