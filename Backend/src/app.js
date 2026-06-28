@@ -10,10 +10,22 @@ import { bookrouter } from "./routes/books.route.js"
 
 console.log(process.env.CORS_ORIGIN)
 
+const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : [];
+
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, postman, curl)
+        if (!origin) return callback(null, true);
+        
+        // Check if origin is allowed or if all origins are allowed
+        if (allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+            return callback(null, true);
+        } else {
+            return callback(new Error(`Origin ${origin} not allowed by CORS`));
+        }
+    },
     credentials: true
-})) // its prevent to give access different ofigin
+})) // prevents access from unauthorized origins
 
 
 app.use(express.json()) // it allow json data
